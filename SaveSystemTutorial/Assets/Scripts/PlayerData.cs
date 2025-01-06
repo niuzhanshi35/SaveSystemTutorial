@@ -5,6 +5,7 @@ namespace SaveSystemTutorial
     public class PlayerData : MonoBehaviour
     {
         private const string PLAYER_DATA_KEY = "PlayerData";
+        const string PLAYER_DATA_FILE_NAME = "PlayerData.json";
         #region Fields
 
         [SerializeField] string playerName = "Player Name";
@@ -36,12 +37,14 @@ namespace SaveSystemTutorial
 
         public void Save()
         {
-            SaveByPlayerPrefs();
+            //SaveByPlayerPrefs();
+            SaveByJson();
         }
 
         public void Load()
         {
-            LoadFromPlayerPrefs();
+            //LoadFromPlayerPrefs();
+            LoadFromJson();
         }
         void SaveByPlayerPrefs()
         {
@@ -56,14 +59,11 @@ namespace SaveSystemTutorial
             PlayerPrefs.SetFloat("PlayerPositionZ", transform.position.z);
 
             PlayerPrefs.Save();*/
-            var savaData=new SaveData();
-
-            savaData.playerName=playerName;
-            savaData.playerLevel=level;
-            savaData.playerCoin=coin;
-            savaData.playerPosition=transform.position;
+            SaveData savaData = SavingData();
 
             SaveSystem.SaveByPlayerPrefs(PLAYER_DATA_KEY, savaData);
+
+           
         }
         void LoadFromPlayerPrefs()
         {
@@ -79,12 +79,8 @@ namespace SaveSystemTutorial
                  PlayerPrefs.GetFloat("PlayerPositionZ", 0f)
                  );*/
             var json = SaveSystem.LoadFromPlayerPrefs(PLAYER_DATA_KEY);
-            var saveData=JsonUtility.FromJson<SaveData>(json);
-
-            playerName = saveData.playerName;
-            level = saveData.playerLevel;
-            coin = saveData.playerCoin;
-            transform.position = saveData.playerPosition;
+            var saveData = JsonUtility.FromJson<SaveData>(json);
+            LoadData(saveData);
         }
 
 
@@ -94,7 +90,8 @@ namespace SaveSystemTutorial
             if (Input.GetKeyDown(KeyCode.P))
             {
                 // 调用自定义函数
-                DeletePlayerDataPrefs();
+                //  DeletePlayerDataPrefs();
+                DeleteSaveFile();
             }
         }
         public static void DeletePlayerDataPrefs()
@@ -102,5 +99,37 @@ namespace SaveSystemTutorial
             PlayerPrefs.DeleteAll();
         }
         #endregion
+        void SaveByJson()
+        {
+            // SaveSystem.SaveByJson(PLAYER_DATA_FILE_NAME, SavingData());
+            SaveSystem.SaveByJson($"{System.DateTime.Now:yyyy.M.dd.HH-mm-ss}.sav", SavingData());
+        }
+        void LoadFromJson()
+        {
+           var  saveData=SaveSystem.LoadFromJson<SaveData>(PLAYER_DATA_FILE_NAME);
+            LoadData(saveData);
+        }
+        SaveData SavingData()
+        {
+            var savaData = new SaveData();
+
+            savaData.playerName = playerName;
+            savaData.playerLevel = level;
+            savaData.playerCoin = coin;
+            savaData.playerPosition = transform.position;
+            return savaData;
+        }
+
+        private void LoadData(SaveData saveData)
+        {
+            playerName = saveData.playerName;
+            level = saveData.playerLevel;
+            coin = saveData.playerCoin;
+            transform.position = saveData.playerPosition;
+        }
+        public static void DeleteSaveFile()
+        {
+            SaveSystem.DeleteSaveFile(PLAYER_DATA_FILE_NAME);
+        }
     }
 }
